@@ -31,7 +31,7 @@ description: 为 NSFC 申请书创建或重绘概念图、研究内容关系图�
    python nsfc-figure/scripts/validate_drawio.py roadmap.drawio
    ```
 
-6. 若本机有 Draw.io Desktop CLI，再导出 SVG/PDF/PNG 并检查打印尺寸；若没有导出器，应明确说明“XML 已验证、渲染导出未在本机执行”，不要把 XML 可解析等同于视觉验收。
+6. 交付前使用官方 Draw.io Desktop 实际导出 SVG/PDF/PNG，打开导出文件并按申请书中的实际尺寸检查。仅有 XML 可解析、导出命令成功或第三方渲染结果都不能代替视觉验收。若本机无法完成官方渲染，应明确说明“XML 已验证、渲染导出未在本机执行”，并把结果标记为待视觉验收，不得称为可直接使用。
 7. 对最终 SVG/PNG 检查是否意外嵌入完整编辑源：
 
    ```bash
@@ -53,12 +53,12 @@ description: 为 NSFC 申请书创建或重绘概念图、研究内容关系图�
 
 - 需要选择版式、配色、字号或导出格式时，阅读 [references/drawio-authoring.md](references/drawio-authoring.md)。
 - 需要快速搭建分栏技术路线时，复制并修改 [assets/three-stage-roadmap.json](assets/three-stage-roadmap.json)，再运行生成脚本。
-- 需要检查生成器的完整用例时，查看 [examples/fictional-technical-roadmap.json](examples/fictional-technical-roadmap.json) 及其 `.drawio` 输出。示例是虚构内容，只用于验证工作流。
+- 需要检查生成器的完整用例时，查看 [examples/fictional-technical-roadmap.json](examples/fictional-technical-roadmap.json)、对应的 `.drawio` 源文件和官方 Draw.io 导出的 PNG 预览。示例是虚构内容，只用于验证工作流。
 
 ## 验收
 
 - 只看图，能否说出核心问题、研究阶段、验证方式和最终汇聚点？
 - 缩放到申请书中的实际宽度后，最小文字是否仍可读？
 - 箭头是否表达真实依赖，而非仅为了连接所有卡片？
-- XML 验证是否通过？导出器可用时，SVG/PDF/PNG 是否成功生成且无裁切、溢出、字体替换、连接线错位或意外嵌入的编辑源？
+- XML 验证是否通过？是否已实际打开官方 Draw.io 导出的 SVG/PDF/PNG，确认无裁切、溢出、字体替换、连接线错位或意外嵌入的编辑源？
 - 图与正文的术语、顺序、编号和预期产出是否一致？

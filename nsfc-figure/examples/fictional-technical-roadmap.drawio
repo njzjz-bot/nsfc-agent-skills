@@ -80,19 +80,19 @@
         <mxCell id="output-25" value="阶段产出｜调控证据与适用范围" style="rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#D1E3FB;strokeColor=#2F80ED;strokeWidth=1.5;align=center;verticalAlign=middle;fontFamily=Microsoft YaHei;fontSize=13;fontStyle=1;fontColor=#2F80ED;spacing=8;overflow=hidden;" vertex="1" parent="1">
           <mxGeometry x="822.00" y="580.00" width="332.00" height="52.00" as="geometry" />
         </mxCell>
-        <mxCell id="sequence-26" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#AAB7C4;dashed=0;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;" edge="1" parent="1" source="stage-4" target="stage-12">
+        <mxCell id="sequence-26" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#AAB7C4;dashed=0;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;" edge="1" parent="1" source="stage-4" target="number-11">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="378.00" y="112.00" />
-              <mxPoint x="478.00" y="112.00" />
+              <mxPoint x="451.00" y="112.00" />
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="sequence-27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#AAB7C4;dashed=0;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;entryX=0.000;entryY=0.500;entryDx=0;entryDy=0;" edge="1" parent="1" source="stage-12" target="stage-20">
+        <mxCell id="sequence-27" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=block;endFill=1;strokeWidth=2;strokeColor=#AAB7C4;dashed=0;exitX=1.000;exitY=0.500;exitDx=0;exitDy=0;entryX=0.500;entryY=0.000;entryDx=0;entryDy=0;" edge="1" parent="1" source="stage-12" target="number-19">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="766.00" y="112.00" />
-              <mxPoint x="866.00" y="112.00" />
+              <mxPoint x="839.00" y="112.00" />
             </Array>
           </mxGeometry>
         </mxCell>

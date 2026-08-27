@@ -53,7 +53,7 @@
 
 ## 导出与视觉检查
 
-若 Draw.io Desktop CLI 在 `PATH` 中，可使用类似命令导出；不同版本的参数可能略有差异，应先运行 `drawio --help`：
+使用官方 Draw.io Desktop CLI 导出；不同版本的参数可能略有差异，应先运行 `drawio --help`：
 
 ```bash
 drawio --export --format svg \
@@ -61,6 +61,9 @@ drawio --export --format svg \
 
 drawio --export --format pdf --crop \
   --output roadmap.pdf roadmap.drawio
+
+drawio --export --format png --scale 2 --border 20 \
+  --output roadmap.png roadmap.drawio
 ```
 
 `--embed-diagram` 会把完整可编辑源嵌入 SVG/PNG，适合受控的内部协作，不适合作为默认提交产物。公开或提交前应确认导出文件不含 `mxfile` 编辑数据及不必要的作者、路径或软件元数据，同时把私有 `.drawio` 源文件单独保存。
@@ -73,7 +76,7 @@ python nsfc-figure/scripts/check_export_metadata.py roadmap.svg roadmap.png
 
 脚本返回非零状态表示检测到内嵌编辑源、文件损坏或不支持的格式。它只报告元数据键，不打印元数据内容，以免检查日志再次泄露文本。
 
-导出后检查：
+导出后必须实际打开文件检查；命令返回成功不代表图可以直接使用：
 
 1. 页面没有被裁切，卡片文字没有溢出或被省略。
 2. 字体替换后没有改变断行和卡片高度。

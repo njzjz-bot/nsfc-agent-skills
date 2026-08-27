@@ -268,7 +268,10 @@ def build_document(config: dict[str, Any]) -> ET.ElementTree:
     lane_y = 130.0
     lane_height = 520.0
     lane_width = (page_width - 2 * margin - gap * (len(stages) - 1)) / len(stages)
-    stage_headers: list[tuple[str, float, float]] = []
+    # Each tuple keeps the source header route and the numbered chip used as
+    # the next stage's visible arrow target. Targeting the chip avoids placing
+    # an arrowhead over the first character of the stage title after export.
+    stage_flow_nodes: list[tuple[str, float, str, float]] = []
     stage_outputs: list[str] = []
 
     for stage_index, stage in enumerate(stages, start=1):
@@ -302,7 +305,7 @@ def build_document(config: dict[str, Any]) -> ET.ElementTree:
             "align=center",
             "verticalAlign=middle",
         )
-        _add_vertex(
+        chip_id = _add_vertex(
             root,
             ids.new("number"),
             str(stage_index),
@@ -336,7 +339,14 @@ def build_document(config: dict[str, Any]) -> ET.ElementTree:
             lane_width - 76,
             40,
         )
-        stage_headers.append((header_id, lane_x + lane_width - 16, lane_x + 60))
+        stage_flow_nodes.append(
+            (
+                header_id,
+                lane_x + lane_width - 16,
+                chip_id,
+                lane_x + 16 + chip_size / 2,
+            )
+        )
 
         summary_style = _style(
             "rounded=1",
@@ -428,7 +438,9 @@ def build_document(config: dict[str, Any]) -> ET.ElementTree:
         )
         stage_outputs.append(output_id)
 
-    for (source, source_right, _), (target, _, target_left) in pairwise(stage_headers):
+    for (source, source_right, _, _), (_, _, target, target_center) in pairwise(
+        stage_flow_nodes
+    ):
         _add_edge(
             root,
             ids.new("sequence"),
@@ -436,11 +448,12 @@ def build_document(config: dict[str, Any]) -> ET.ElementTree:
             target,
             exit_x=1,
             exit_y=0.5,
-            entry_x=0,
-            entry_y=0.5,
-            # Route above the panels so the line cannot cross the next stage's
-            # numbered chip, even in the narrower four-stage layout.
-            waypoints=[(source_right, 112), (target_left, 112)],
+            entry_x=0.5,
+            entry_y=0,
+            # Route above the panels and land on the numbered chip. The source
+            # segment is hidden by the panel until it reaches the top border,
+            # so the sequence reads as panel-to-next-stage without crossing text.
+            waypoints=[(source_right, 112), (target_center, 112)],
         )
 
     final_style = _style(

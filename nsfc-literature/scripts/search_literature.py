@@ -13,21 +13,73 @@ Output: JSON list of papers with title, DOI, authors, year, citation count, abst
 import argparse
 import json
 import sys
-import urllib.request
+import urllib.error
 import urllib.parse
-
+import urllib.request
 
 OPENALEX_API = "https://api.openalex.org/works"
-MAILTO = "openclaw-agent@example.com"  # polite pool
+USER_AGENT = "nsfc-agent-skills/0.1 (OpenAlex literature helper)"
 
 
-def search(query: str, limit: int = 10, year_from: int | None = None,
-           sort: str = "relevance_score") -> list[dict]:
+def _parse_work(work: dict) -> dict:
+    """Normalize one OpenAlex work while tolerating nullable API fields."""
+    authors = []
+    for authorship in work.get("authorships") or []:
+        author = authorship.get("author") or {}
+        name = author.get("display_name") or ""
+        if name:
+            authors.append(name)
+
+    doi = work.get("doi") or ""
+    doi = doi.removeprefix("https://doi.org/")
+
+    abstract_index = work.get("abstract_inverted_index") or {}
+    word_positions = [
+        (position, word)
+        for word, positions in abstract_index.items()
+        for position in positions
+    ]
+    word_positions.sort()
+    abstract = " ".join(word for _, word in word_positions)
+
+    primary_location = work.get("primary_location") or {}
+    source = primary_location.get("source") or {}
+    return {
+        "title": work.get("title") or "",
+        "doi": doi,
+        "authors": authors[:5],
+        "year": work.get("publication_year"),
+        "cited_by_count": work.get("cited_by_count") or 0,
+        "journal": source.get("display_name") or "",
+        "abstract": abstract[:500],
+        "openalex_id": work.get("id") or "",
+    }
+
+
+def search(
+    query: str,
+    limit: int = 10,
+    year_from: int | None = None,
+    sort: str = "relevance_score",
+    mailto: str | None = None,
+) -> list[dict]:
+    """Search OpenAlex and return normalized records.
+
+    ``mailto`` is optional. Supply a real contact address to use OpenAlex's
+    polite pool; the script deliberately does not ship a fake default address.
+    """
+    query = query.strip()
+    if not query:
+        raise ValueError("query must not be empty")
+    if not 1 <= limit <= 50:
+        raise ValueError("limit must be between 1 and 50")
+
     params = {
         "search": query,
-        "per_page": min(limit, 50),
-        "mailto": MAILTO,
+        "per_page": limit,
     }
+    if mailto:
+        params["mailto"] = mailto
     # OpenAlex sorts by relevance by default when using search; only add sort for other fields
     if sort != "relevance_score":
         params["sort"] = sort + ":desc"
@@ -35,67 +87,64 @@ def search(query: str, limit: int = 10, year_from: int | None = None,
         params["filter"] = f"from_publication_date:{year_from}-01-01"
 
     url = f"{OPENALEX_API}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    req = urllib.request.Request(
+        url,
+        headers={"Accept": "application/json", "User-Agent": USER_AGENT},
+    )
     with urllib.request.urlopen(req, timeout=30) as resp:
         data = json.loads(resp.read().decode())
 
-    results = []
-    for work in data.get("results", []):
-        authors = [
-            a.get("author", {}).get("display_name", "")
-            for a in work.get("authorships", [])
-        ]
-        doi = work.get("doi", "")
-        if doi and doi.startswith("https://doi.org/"):
-            doi = doi[len("https://doi.org/"):]
-
-        abstract_index = work.get("abstract_inverted_index")
-        abstract = ""
-        if abstract_index:
-            # Reconstruct abstract from inverted index
-            word_positions = []
-            for word, positions in abstract_index.items():
-                for pos in positions:
-                    word_positions.append((pos, word))
-            word_positions.sort()
-            abstract = " ".join(w for _, w in word_positions)
-
-        results.append({
-            "title": work.get("title", ""),
-            "doi": doi,
-            "authors": authors[:5],  # first 5 authors
-            "year": work.get("publication_year"),
-            "cited_by_count": work.get("cited_by_count", 0),
-            "journal": (work.get("primary_location") or {}).get("source", {}).get("display_name", ""),
-            "abstract": abstract[:500] if abstract else "",
-            "openalex_id": work.get("id", ""),
-        })
-
-    return results
+    return [_parse_work(work) for work in data.get("results") or []]
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Search academic literature via OpenAlex")
+    parser = argparse.ArgumentParser(
+        description="Search academic literature via OpenAlex"
+    )
     parser.add_argument("query", help="Search query")
-    parser.add_argument("--limit", type=int, default=10, help="Number of results (max 50)")
-    parser.add_argument("--year-from", type=int, default=None, help="Filter papers from this year")
-    parser.add_argument("--sort", default="relevance_score",
-                        choices=["relevance_score", "cited_by_count", "publication_date"],
-                        help="Sort order")
-    parser.add_argument("--compact", action="store_true", help="Compact output (one line per paper)")
+    parser.add_argument(
+        "--limit", type=int, default=10, help="Number of results (max 50)"
+    )
+    parser.add_argument(
+        "--year-from", type=int, default=None, help="Filter papers from this year"
+    )
+    parser.add_argument(
+        "--sort",
+        default="relevance_score",
+        choices=["relevance_score", "cited_by_count", "publication_date"],
+        help="Sort order",
+    )
+    parser.add_argument(
+        "--compact", action="store_true", help="Compact output (one line per paper)"
+    )
+    parser.add_argument(
+        "--mailto", default=None, help="Real contact email for the OpenAlex polite pool"
+    )
     args = parser.parse_args()
 
-    results = search(args.query, args.limit, args.year_from, args.sort)
+    try:
+        results = search(args.query, args.limit, args.year_from, args.sort, args.mailto)
+    except (
+        ValueError,
+        urllib.error.URLError,
+        TimeoutError,
+        json.JSONDecodeError,
+    ) as exc:
+        print(f"Error: OpenAlex search failed: {exc}", file=sys.stderr)
+        return 1
 
     if args.compact:
         for r in results:
             authors_str = ", ".join(r["authors"][:3])
             if len(r["authors"]) > 3:
                 authors_str += " et al."
-            print(f"[{r['year']}] {r['title']} | {authors_str} | {r['journal']} | DOI:{r['doi']} | Cited:{r['cited_by_count']}")
+            print(
+                f"[{r['year']}] {r['title']} | {authors_str} | {r['journal']} | DOI:{r['doi']} | Cited:{r['cited_by_count']}"
+            )
     else:
         print(json.dumps(results, ensure_ascii=False, indent=2))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
